@@ -17,7 +17,7 @@ async fn main() -> Result<(), reqwest::Error> {
 
     let client = reqwest::Client::new();
     let resp = client.post("http://127.0.0.1:8545").json(&map).send().await?;
-    println!("content = {:?}", resp);
+    println!("content = {:?}", resp.text().await);
     // match client.post("http://127.0.0.1:8545").json(&map).send().await {
     //     Ok(resp) => match resp.text().await {
     //         Ok(text) => {
