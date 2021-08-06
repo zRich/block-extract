@@ -1,6 +1,11 @@
+use json;
 use reqwest;
 use std::collections::HashMap;
 use std::fmt;
+use std::io::Write;
+// use std::fs::{OpenOptions, File, write};
+use tokio::fs::File;
+use tokio::io::AsyncWriteExt;
 // #[macro_use]
 // extern crate serde;
 // extern crate serde_derive;
@@ -8,7 +13,7 @@ use std::fmt;
 // use std::collections::HashMap;
 
 #[tokio::main]
-async fn main() -> Result<(), reqwest::Error>{
+async fn main() -> Result<(), reqwest::Error> {
     let mut map = HashMap::new();
     map.insert("jsonrpc", "2.0");
     map.insert("method", "getBlockByNumber");
@@ -17,13 +22,22 @@ async fn main() -> Result<(), reqwest::Error>{
     map.insert("id", "1");
 
     let client = reqwest::Client::new();
-    let body = client
-        .post("http://127.0.0.1:8545")
-        // .send()
-        .json(&map)
-        .send()
-        .await?;
+    match client.post("http://127.0.0.1:8545").json(&map).send().await {
+        Ok(resp) => match resp.text().await {
+            Ok(text) => {
+                // File::create("path")
+                match File::create("0x1a.json").await {
+                    Ok(mut file) => {
+                        file.write_all(text.as_bytes());
+                        ()
+                    }
+                    Err(err) => panic!("Unable to create file {}: {}", "0x1a.json", err,),
+                }
+            }
+            Err(err) => panic!("Unable to create file {}: {}", "0x1a.json", err,),
+        },
+        Err(err) => panic!("Unable to create file {}: {}", "0x1a.json", err,),
+    }
 
-    println!("body = {:?}", body);
     Ok(())
 }
