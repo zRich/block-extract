@@ -1,24 +1,39 @@
-use json;
+use json::{self, object};
 use reqwest;
 use std::collections::HashMap;
 // use std::fs::{OpenOptions, File, write};
 use tokio::fs::File;
 use tokio::io::AsyncWriteExt;
 
-
 #[tokio::main]
 async fn main() -> Result<(), reqwest::Error> {
-    let mut map = HashMap::new();
-    map.insert("jsonrpc", "2.0");
-    map.insert("method", "getBlockByNumber");
-    // map.insert("params", format!(b#"[1,"{}", true]"#, 0x1a_u64));
-    map.insert("params", r#"[1,"0x1a", true]"#);
-    map.insert("id", "1");
+    // let mut map = HashMap::new();
+    // map.insert("jsonrpc", "2.0");
+    // // map.insert("method", "getBlockByNumber");
+    // map.insert("method", "getBlockNumber");
+    // // map.insert("params", format!(b#"[1,"{}", true]"#, 0x1a_u64));
+    // map.insert("params", r#"[1]"#);
+    // // map.insert("params", r#"[1,"0x1a", true]"#);
+    // map.insert("id", "1");
+
+    let post_body = object!{
+        jsonrpc: String::from("2.0"),
+        method: String::from("getBlockByNumber"),
+        id: 1,
+        params: [1, "0x1a", true]
+    };
+
+    println!("map in json = {} ", post_body.dump());
 
     let client = reqwest::Client::new();
-    let resp = client.post("http://127.0.0.1:8545").json(&map).send().await?;
-    println!("content = {:?}", resp.text().await);
+    let resp = client
+        .post("http://127.0.0.1:8545")
+        .body(post_body.dump())
+        .send()
+        .await?;
     
+    println!("content = {:?}", resp.text().await);
+
     // match client.post("http://127.0.0.1:8545").json(&map).send().await {
     //     Ok(resp) => match resp.text().await {
     //         Ok(text) => {
