@@ -33,7 +33,6 @@ async fn fetch_block(blockId: u128) -> Result<(), reqwest::Error> {
     {
         Ok(resp) => match resp.text().await {
             Ok(text) => {
-                println!("RESPONSE: {} bytes received {:?} ", text.len(), text);
                 match File::create(block.file_name).await {
                     Ok(mut file) => {
                         file.write_all(text.as_bytes()).await;
