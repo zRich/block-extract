@@ -107,6 +107,13 @@ struct BlockNumber {
 }
 
 async fn fetch_block_number() -> Result<(BlockNumber), reqwest::Error> {
+    // let post_body = object! {
+    //     jsonrpc: String::from("2.0"),
+    //     method: String::from("getBlockNumber"),
+    //     id: 1,
+    //     params: [1]
+    // };
+
     let post_body = object! {
         jsonrpc: String::from("2.0"),
         method: String::from("getBlockNumber"),
