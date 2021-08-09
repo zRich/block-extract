@@ -13,6 +13,7 @@ async fn main() -> Result<(), reqwest::Error> {
         let block_number = fetch_block_number().await?;
         cli_args.end = block_number.height;
     }
+    println!("fetch block from {} to {} ....", cli_args.start, cli_args.end);
     for i in cli_args.start..cli_args.end {
         fetch_block(i).await?
     }
