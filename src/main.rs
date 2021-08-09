@@ -1,18 +1,21 @@
+use clap::{self, crate_version, value_t, App, Arg};
 use json::{self, object};
 use reqwest;
-use serde::de::value::Error;
-use std::collections::HashMap;
-use std::fmt::{self, format};
-// use std::fs::{OpenOptions, File, write};
+use serde::{Deserialize, Serialize};
 use tokio::fs::{File, OpenOptions};
 use tokio::io::AsyncWriteExt;
 
 #[tokio::main]
 async fn main() -> Result<(), reqwest::Error> {
-    fetch_block(01).await
+    let cli_args = parse_args();
+
+    for i in cli_args.start..cli_args.end {
+        fetch_block(i).await?
+    }
+    Ok(())
 }
 
-async fn fetch_block(blockId: u128) -> Result<(), reqwest::Error> {
+async fn fetch_block(blockId: u64) -> Result<(), reqwest::Error> {
     let block = Block::new(blockId);
 
     let file_name = block.file_name();
@@ -37,7 +40,7 @@ async fn fetch_block(blockId: u128) -> Result<(), reqwest::Error> {
                 match OpenOptions::new()
                     .create(true)
                     .write(true)
-                    .open( block.file_name())
+                    .open(block.file_name())
                     .await
                 {
                     Ok(mut file) => {
@@ -49,7 +52,11 @@ async fn fetch_block(blockId: u128) -> Result<(), reqwest::Error> {
                     }
                 }
             }
-            Err(err) => panic!("Fetching block data failed {} : {}", block.hex_height(), err,),
+            Err(err) => panic!(
+                "Fetching block data failed {} : {}",
+                block.hex_height(),
+                err,
+            ),
         },
         Err(err) => panic!("Unable to connect server {}: {}", block.hex_height(), err,),
     }
@@ -62,7 +69,7 @@ pub struct Block {
 }
 
 impl Block {
-    fn new(height: u128) -> Self {
+    fn new(height: u64) -> Self {
         Block {
             hex_height: hex_block_height(height),
             file_name: format!("{}.json", hex_block_height(height)),
@@ -78,6 +85,116 @@ impl Block {
     }
 }
 
-fn hex_block_height(height: u128) -> String {
+fn hex_block_height(height: u64) -> String {
     format!("{:#08x}", height)
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct BlockNumber {
+    id: u64,
+    version: String,
+    height: u64,
+}
+
+async fn fetch_block_number() -> Result<(BlockNumber), reqwest::Error> {
+    let post_body = object! {
+        jsonrpc: String::from("2.0"),
+        method: String::from("getBlockNumber"),
+        id: 1,
+        params: [1]
+    };
+
+    let blocknumber = BlockNumber {
+        id: 1,
+        version: "2.0".to_string(),
+        height: 1,
+    };
+
+    let client = reqwest::Client::new();
+
+    match client
+        .get("http://127.0.0.1:8545")
+        .body(post_body.dump())
+        .send()
+        .await
+    {
+        Ok(resp) => match resp.text().await {
+            Ok(text) => {
+                let blocknumber: BlockNumber = serde_json::from_str(text.as_str()).unwrap();
+            }
+            Err(err) => panic!("Fetching block data failed : {}", err,),
+        },
+        Err(err) => panic!("Unable to connect server : {}", err,),
+    }
+    Ok(blocknumber)
+}
+
+#[cfg(test)]
+mod test {
+    extern crate json;
+    use core::panic;
+
+    use json::object;
+    use serde_json;
+    #[test]
+    fn test_dump() {
+        let post_body = object! {
+            jsonrpc: String::from("2.0"),
+            method: String::from("getBlockByNumber"),
+            id: 1,
+            params: [1, 2, true]
+        };
+
+        println!("{}", post_body.dump());
+
+        let post_body = object! {
+            jsonrpc: String::from("2.0"),
+            method: String::from("getBlockByNumber"),
+            id: 1,
+            params: [1, 2, true]
+        };
+    }
+
+    use super::fetch_block_number;
+    #[test]
+    fn test_fetch_block_number() {
+        let blocknumber = match fetch_block_number().await {
+            Ok(bn) => bn,
+            Err(_) => panic!("error"),
+        };
+
+        println!("{:?}", blocknumber);
+    }
+}
+#[derive(Debug)]
+struct CliArgs {
+    start: u64,
+    end: u64,
+}
+
+fn parse_args() -> CliArgs {
+    let matches = clap::App::new("FISCO BCOS Block data extract.")
+        .version(crate_version!())
+        .author("Zhenhua ZHAO zhao.zhenhua@gmail.com")
+        .about("FISCO BCOS Block data extract.")
+        .arg(
+            Arg::with_name("start")
+                .short("-s")
+                .long("start")
+                .takes_value(true)
+                .help("start block number"),
+        )
+        .arg(
+            Arg::with_name("end")
+                .short("e")
+                .long("end")
+                .takes_value(true)
+                .help("to block number"),
+        )
+        .get_matches();
+
+    CliArgs {
+        start: value_t!(matches, "start", u64).unwrap_or(1),
+        end: value_t!(matches, "end", u64).unwrap_or(100),
+    }
 }
