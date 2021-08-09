@@ -17,9 +17,9 @@ async fn main() -> Result<(), reqwest::Error> {
         // let block_number = fetch_block_number().await?;
         cli_args.number = cli_args.start + 1;
     }
-    println!("fetch block from {} to {} ....", cli_args.start, cli_args.number);
+    println!("fetch block from {} to {} ....", cli_args.start, cli_args.start + cli_args.number);
 
-    for i in cli_args.start..cli_args.number {
+    for i in cli_args.start..(cli_args.start + cli_args.number) {
         fetch_block(i).await?
     }
     Ok(())
