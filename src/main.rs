@@ -9,14 +9,19 @@ use tokio::io::AsyncWriteExt;
 async fn main() -> Result<(), reqwest::Error> {
     let mut cli_args = parse_args();
 
-    if cli_args.end == 0 {
-        let block_number = fetch_block_number().await?;
-        cli_args.end = block_number.height;
-    }
-    println!("fetch block from {} to {} ....", cli_args.start, cli_args.end);
-    for i in cli_args.start..cli_args.end {
-        fetch_block(i).await?
-    }
+    let block_number = fetch_block_number().await?;
+
+    println!("last block = {:?} ....", block_number);
+
+    // if cli_args.end == 0 {
+    //     let block_number = fetch_block_number().await?;
+    //     cli_args.end = block_number.result.parse();
+    // }
+    // println!("fetch block from {} to {} ....", cli_args.start, cli_args.end);
+
+    // for i in cli_args.start..cli_args.end {
+    //     fetch_block(i).await?
+    // }
     Ok(())
 }
 
@@ -98,7 +103,7 @@ fn hex_block_height(height: u64) -> String {
 struct BlockNumber {
     id: u64,
     version: String,
-    height: u64,
+    result: String,
 }
 
 async fn fetch_block_number() -> Result<(BlockNumber), reqwest::Error> {
@@ -109,10 +114,10 @@ async fn fetch_block_number() -> Result<(BlockNumber), reqwest::Error> {
         params: [1]
     };
 
-    let blocknumber = BlockNumber {
+    let mut blocknumber = BlockNumber {
         id: 1,
         version: "2.0".to_string(),
-        height: 1,
+        result: "1".to_string(),
     };
 
     let client = reqwest::Client::new();
@@ -125,7 +130,8 @@ async fn fetch_block_number() -> Result<(BlockNumber), reqwest::Error> {
     {
         Ok(resp) => match resp.text().await {
             Ok(text) => {
-                let blocknumber: BlockNumber = serde_json::from_str(text.as_str()).unwrap();
+                let bn: BlockNumber = serde_json::from_str(text.as_str()).unwrap();
+                blocknumber.result = bn.result;
             }
             Err(err) => panic!("Fetching block data failed : {}", err,),
         },
