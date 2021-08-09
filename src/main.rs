@@ -137,6 +137,7 @@ async fn fetch_block_number() -> Result<(BlockNumber), reqwest::Error> {
     {
         Ok(resp) => match resp.text().await {
             Ok(text) => {
+                println!("last block = {:?} ....", text);
                 let bn: BlockNumber = serde_json::from_str(text.as_str()).unwrap();
                 blocknumber.result = bn.result;
             }
