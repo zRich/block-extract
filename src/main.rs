@@ -7,8 +7,12 @@ use tokio::io::AsyncWriteExt;
 
 #[tokio::main]
 async fn main() -> Result<(), reqwest::Error> {
-    let cli_args = parse_args();
+    let mut cli_args = parse_args();
 
+    if cli_args.end == 0 {
+        let block_number = fetch_block_number().await?;
+        cli_args.end = block_number.height;
+    }
     for i in cli_args.start..cli_args.end {
         fetch_block(i).await?
     }
@@ -195,6 +199,6 @@ fn parse_args() -> CliArgs {
 
     CliArgs {
         start: value_t!(matches, "start", u64).unwrap_or(1),
-        end: value_t!(matches, "end", u64).unwrap_or(100),
+        end: value_t!(matches, "end", u64).unwrap_or(0),
     }
 }
