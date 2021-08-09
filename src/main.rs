@@ -123,7 +123,7 @@ async fn fetch_block_number() -> Result<(BlockNumber), reqwest::Error> {
     let client = reqwest::Client::new();
 
     match client
-        .get("http://127.0.0.1:8545")
+        .post("http://127.0.0.1:8545")
         .body(post_body.dump())
         .send()
         .await
