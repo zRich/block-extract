@@ -9,19 +9,19 @@ use tokio::io::AsyncWriteExt;
 async fn main() -> Result<(), reqwest::Error> {
     let mut cli_args = parse_args();
 
-    let block_number = fetch_block_number().await?;
+    // let block_number = fetch_block_number().await?;
 
-    println!("last block = {:?} ....", block_number);
+    // println!("last block = {:?} ....", block_number);
 
-    // if cli_args.end == 0 {
-    //     let block_number = fetch_block_number().await?;
-    //     cli_args.end = block_number.result.parse();
-    // }
-    // println!("fetch block from {} to {} ....", cli_args.start, cli_args.end);
+    if cli_args.number == 0 {
+        // let block_number = fetch_block_number().await?;
+        cli_args.number = cli_args.start + 1;
+    }
+    println!("fetch block from {} to {} ....", cli_args.start, cli_args.number);
 
-    // for i in cli_args.start..cli_args.end {
-    //     fetch_block(i).await?
-    // }
+    for i in cli_args.start..cli_args.number {
+        fetch_block(i).await?
+    }
     Ok(())
 }
 
@@ -188,7 +188,7 @@ mod test {
 #[derive(Debug)]
 struct CliArgs {
     start: u64,
-    end: u64,
+    number: u64,
 }
 
 fn parse_args() -> CliArgs {
@@ -204,16 +204,16 @@ fn parse_args() -> CliArgs {
                 .help("start block number"),
         )
         .arg(
-            Arg::with_name("end")
-                .short("e")
-                .long("end")
+            Arg::with_name("number")
+                .short("n")
+                .long("number")
                 .takes_value(true)
-                .help("to block number"),
+                .help("how many blocks to fetch"),
         )
         .get_matches();
 
     CliArgs {
         start: value_t!(matches, "start", u64).unwrap_or(1),
-        end: value_t!(matches, "end", u64).unwrap_or(0),
+        number: value_t!(matches, "number", u64).unwrap_or(0),
     }
 }
