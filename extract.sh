@@ -9,8 +9,8 @@ if [ -z $2 ];then
 fi
 
 i=$1
-block_num=`expr $1 + $2`
-while [ $i -lt $block_num ]
+max_num=`expr $1 + $2`
+while [ $i -lt $max_num ]
 do
 	hex_id=`printf "0x%x" $i`
 	((i++)) 
