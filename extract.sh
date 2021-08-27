@@ -15,6 +15,7 @@ do
 	hex_id=`printf "0x%x" $i`
 	((i++)) 
 	echo "提取区块: ${blockId} 数据..."
-	curl -X POST --data '{"jsonrpc":"2.0","method":"getBlockByNumber","params":[1,"${hex_id}",true],"id":1}' http://127.0.0.1:8545 > ${hex_id}.json
+	curl -X POST --data
+	'{"jsonrpc":"2.0","method":"getBlockByNumber","params":[1,"'${hex_id}'",true],"id":1}' http://127.0.0.1:8545 > ${hex_id}.json
 done
 exit
