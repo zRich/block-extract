@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [ -z $2 ];then
+if [ -z $2 ]; then
 	echo "用法错误。需要输入2个参数："
 	echo "	第一个参数：开始区块序号"
 	echo "	第二个参数：提取区块数量"
